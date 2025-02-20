@@ -40,23 +40,18 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+app.set('trust proxy', true);
 
 const uri = 'mongodb+srv://tysev8301:mw0vXtyfkCW5Naat@cluster0.vavrs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 
 app.use(session({
     secret: 'd1baa1e6977dace2652701ad3a7310e84e498d81f1378b308c766cc9b308e6fccd95d09a806d130313bc422c80b6e8c933d5a3545a2c20cf876d8bf33ad1b7ac', // Change this to a secure key
-    resave: false,
-    saveUninitialized: false,
-    // store: new session.MemoryStore(),
-    store: MongoStore.create({
-        mongoUrl: uri,
-        ttl: 10 * 24 * 60 * 60 // 30 days session expiry
-    }),
+    resave: true,
+    saveUninitialized: true,
     cookie: {
-        httpOnly: true,
-        secure: false, // Set to true if using HTTPS
-        maxAge: 1000 * 60 * 60 * 24 * 30 // 30 days
+        maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+        expires: new Date(Date.now() + (1000 * 60 * 60 * 24 * 30)) // Expires 30 days from now
     }
 }));
 
