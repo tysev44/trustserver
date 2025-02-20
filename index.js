@@ -139,7 +139,7 @@ process.on('unhandledRejection', (reason, promise) => {
 // ---------------- //
 
 
-app.post('/signup', async(req, res) => {
+app.post('/signup', apiLimiter, async(req, res) => {
     try {
         if(req.body.email){
             const exist = await Users.findOne({ email: req.body.email})
@@ -149,14 +149,14 @@ app.post('/signup', async(req, res) => {
                 
                 const hashedPassword = await argon2.hash(req.body.password);
                 const getuid = await Users.create({
-                    first_name: req.body.name,
                     password: hashedPassword,
                     email: req.body.email,
                 });
     
-                req.session.uid = getuid._id
+                req.session.email = getuid.email;
+                req.session.uid = getuid._id;
                 req.session.save()
-    
+     
                 res.json({status: 'success'})
             }
         }
@@ -185,31 +185,32 @@ app.post('/logout', (req, res) => {
 // ---login functionality-- //
 // ---------------- //
 
-app.post('/login', async(req, res) => {
+app.post('/login', apiLimiter, async(req, res) => {
     try {
         const email = req.body.email;
-        const updt = await Users.findOne({ email });
 
-        if (!updt) {
-            return res.json({ status: 'error', message: 'Account does not exist' });
-        }
-
-        const match = await argon2.verify(updt.password, req.body.password);
-        
-        if (!match) {
-            return res.json({ status: 'error', message: 'Incorrect password' });
-        }
-
-        req.session.uid = updt._id;
-        await req.session.save();
-        res.json({ status: 'success' });
-
+        await Users.findOne({ email : email }).then((updt)=>{
+            if(updt){
+                const password = updt.password
+                const match = argon2.verify(password, req.body.password)
+                
+                if(!match){
+                    return res.json({ status: 'error', message: 'Incorrect password' });
+                } 
+    
+                req.session.email = email;
+                req.session.save()
+                req.session.uid = updt._id;
+                req.session.save()
+                res.json({ status: 'success'})
+            }else{
+                res.json({ status: 'error', message : 'Account does not exist' });
+            }
+        });
     } catch (error) {
-        console.error(error);
         res.json({ status: 'error', message: 'Server error' });
     }
-});
-
+})
 
 // ---------------------- //
 // ---login functionality-- //
