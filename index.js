@@ -155,7 +155,7 @@ const Users = mongoose.model('users', userSchema);
 // ---------------- //
 
 app.post('/', apiLimiter, async(req, res) => {
-    try {
+    // try {
         const email = req.session.user.email
         if(email){
             const sign = await Users.findOne({ email })
@@ -163,9 +163,9 @@ app.post('/', apiLimiter, async(req, res) => {
         }else{
             return res.json({user: null, status : 'offline'})
         }
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: error });
-    }
+    // } catch (error) {
+    //     res.status(500).json({ status: 'error', message: error });
+    // }
 })
 
 
