@@ -9,10 +9,10 @@ const argon2 = require('argon2');
 const path = require('path');
 const fs = require('fs');
 const rateLimit = require('express-rate-limit');
-const MongoStore = require("connect-mongo");
+const MongoStore = require('rate-limit-mongo');
 
 
-// ---------------------- // 
+// ---------------------- //
 // ---give permission to client-- //
 // ---------------- //
 
@@ -33,12 +33,14 @@ app.use(cookie());
 // ---setting the session cookie-- //
 // ---------------- //
 
+app.set('trust proxy', true);
+
 let store;
 
 try {
   // Initialize MongoStore with error handling
   store = new MongoStore({
-    uri: 'mongodb+srv://tysev8301:oaWkFBiWMImk6NJg@cluster0.bwf8u.mongodb.net/e-commerce?retryWrites=true&w=majority', // Updated URI to avoid IPv6
+    uri: 'mongodb+srv://tysev8301:mw0vXtyfkCW5Naat@cluster0.vavrs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', // Updated URI to avoid IPv6
     collectionName: 'rateLimit', // Collection for storing rate limit data
     expireTimeMs: 15 * 60 * 1000, // Expiration time for each entry
     userKey: (req) => req.ip, // Use IP address as the identifier
@@ -60,14 +62,8 @@ const apiLimiter = rateLimit({
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
-
-app.set('trust proxy', true);
-
-const uri = 'mongodb+srv://tysev8301:mw0vXtyfkCW5Naat@cluster0.vavrs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-
-
 app.use(session({
-    secret: 'secret', // Change this to a secure key
+    secret:'secret',
     resave: true,
     saveUninitialized: true,
     cookie: {
@@ -83,25 +79,46 @@ app.use(session({
 // ---connecting to database-- //
 // ---------------- //
 
+const uri = 'mongodb+srv://tysev8301:mw0vXtyfkCW5Naat@cluster0.bwf8u.mongodb.net/e-commerce?retryWrites=true&w=majority';
 
-mongoose.connect(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    maxPoolSize: 10,
-}).then(() => {
-    console.error('✅ Connected to MongoDB');
-}).catch((error) => {
-    console.error('❌ MongoDB Connection Error:', error);
+// Connection options
+const options = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  maxPoolSize: 200, // Adjust connection pool size as needed
+};
+
+// Connect to MongoDB
+mongoose
+  .connect(uri, options)
+  .catch((error) => {
+    console.error('Error connecting to MongoDB:', error);
+  });
+
+// Listen for successful connection
+mongoose.connection.once('open', () => {
+  console.log('Connected to MongoDB');
 });
 
-// Handle MongoDB Connection Events
-mongoose.connection.on('error', (err) => console.error('MongoDB Error:', err));
+// Optional: Additional event listeners for connection management
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
+});
+
 mongoose.connection.on('disconnected', () => {
-    console.log('MongoDB Disconnected'); 
-    mongoose.connect(uri)
+  console.log('MongoDB connection disconnected');
 });
 
-
+// mongoose.connect('mongodb+srv://tysev8301:oaWkFBiWMImk6NJg@cluster0.bwf8u.mongodb.net/e-commerce?retryWrites=true&w=majority', {
+//     maxPoolSize: 500
+// })
+// .catch((error) => {
+//     console.error('Error connecting to MongoDB', error);
+// });
+ 
+// mongoose.connection.once('open', () => {
+//     console.log('Connected to MongoDB');
+// });
 
 
 ////////////////////////////////////////
@@ -110,13 +127,14 @@ mongoose.connection.on('disconnected', () => {
 const userSchema = new mongoose.Schema({
     email: String,
     verifyemail: String,
-    balance: Number,  
+    otp: String,  
     first_name: String,
     title: String,
-    location: String,
+    address: String,
     password: String,
     ordered: Boolean,
 });
+
 
 //////////////////////////////////////////
 //////////////////////////////////////////
@@ -131,25 +149,15 @@ app.post('/', apiLimiter, async(req, res) => {
     try {
         const email = req.session.email
         if(email){
-            const sign = await Users.findOne({email: email })
+            const sign = await Users.findOne({ email })
             res.json({ user : sign, status : 'online'})
         }else{
-            return res.json({user: null, status : 'logout'})
+            return res.json({user: null, status : 'offline'})
         }
     } catch (error) {
         res.json({ status : 'error'})
     }
 })
-
-process.on('uncaughtException', (err) => {
-    console.error('🔥 Unhandled Exception:', err);
-    process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('🚨 Unhandled Promise Rejection:', reason);
-    process.exit(1);
-});
 
 
 // ============================================================================================================== //
@@ -170,6 +178,7 @@ app.post('/signup', apiLimiter, async(req, res) => {
                 
                 const hashedPassword = await argon2.hash(req.body.password);
                 const getuid = await Users.create({
+                    first_name: req.body.name,
                     password: hashedPassword,
                     email: req.body.email,
                 });
@@ -189,7 +198,7 @@ app.post('/signup', apiLimiter, async(req, res) => {
 // ---logout functionality-- //
 // ---------------- //
 
-app.post('/logout', apiLimiter, (req, res) => {
+app.post('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             console.error('Error destroying session:', err);
@@ -232,10 +241,7 @@ app.post('/login', apiLimiter, async(req, res) => {
     }
 })
 
-// ---------------------- //
-// ---login functionality-- //
-// ---------------- //
-app.post('/forget_password', async(req, res) => {
+app.post('/forget_password', apiLimiter, async(req, res) => {
     try {
         const email = req.body.email;
 
@@ -250,10 +256,15 @@ app.post('/forget_password', async(req, res) => {
         res.json({ status: 'error', message: 'Server error' });
     }
 })
-
+ 
 
 // ===================================== SIGN-UP, LOG-IN & LOG-OUT ends============================================ //
 // =============================================================================================================== //
+
+
+    // ____________________________________=================LIKES FUNCTIION ends==============___________________________________ //
+
+// =================================================ADDING TO CARTS AND LIKES ends================================================== //
 
 
 
