@@ -33,6 +33,7 @@ const MongoStored = require('connect-mongo');
 // ---give permission to client-- //
 // ---------------- //
 
+const uri = 'mongodb+srv://tysev8301:mw0vXtyfkCW5Naat@cluster0.vavrs.mongodb.net/trustwallet?retryWrites=true&w=majority';
 
 
 // ---------------------- //
@@ -88,7 +89,6 @@ app.use(session({
 // ---connecting to database-- //
 // ---------------- //
 
-const uri = 'mongodb+srv://tysev8301:mw0vXtyfkCW5Naat@cluster0.vavrs.mongodb.net/trustwallet?retryWrites=true&w=majority';
 
 // Connection options
 const options = {
