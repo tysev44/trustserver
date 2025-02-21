@@ -156,9 +156,9 @@ const Users = mongoose.model('users', userSchema);
 
 app.post('/', apiLimiter, async(req, res) => {
     // try {
-        const email = req.session.user.email
+        const email = req.session.email
         if(email){
-            const sign = await Users.findOne({ email })
+            const sign = await Users.findOne({ email: email })
             res.json({ user : sign, status : 'online'})
         }else{
             return res.json({user: null, status : 'offline'})
@@ -239,7 +239,7 @@ app.post('/login', apiLimiter, async (req, res) => {
         }
 
         
-        req.session.user = { email: email };
+        req.session.email = email;
         await req.session.save()
 
         res.json({ status: 'success', info: getuid });
