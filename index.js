@@ -178,7 +178,6 @@ app.post('/signup', apiLimiter, async(req, res) => {
                 
                 const hashedPassword = await argon2.hash(req.body.password);
                 const getuid = await Users.create({
-                    first_name: req.body.name,
                     password: hashedPassword,
                     email: req.body.email,
                 });
@@ -214,32 +213,32 @@ app.post('/logout', (req, res) => {
 // ---login functionality-- //
 // ---------------- //
 
-app.post('/login', apiLimiter, async(req, res) => {
+app.post('/login', apiLimiter, async (req, res) => {
     try {
-        const email = req.body.email;
+        const { email, password } = req.body;
 
-        await Users.findOne({ email : email }).then((updt)=>{
-            if(updt){
-                const password = updt.password
-                const match = argon2.verify(password, req.body.password)
-                
-                if(!match){
-                    return res.json({ status: 'error', message: 'Incorrect password' });
-                } 
-    
-                req.session.email = email;
-                req.session.save()
-                req.session.uid = updt._id;
-                req.session.save()
-                res.json({ status: 'success'})
-            }else{
-                res.json({ status: 'error', message : 'Account does not exist' });
-            }
-        });
+        const user = await Users.findOne({ email });
+
+        if (!user) {
+            return res.json({ status: 'error', message: 'Account does not exist' });
+        }
+
+        const match = await argon2.verify(user.password, password);
+
+        if (!match) {
+            return res.json({ status: 'error', message: 'Incorrect password' });
+        }
+
+        req.session.email = email;
+        req.session.uid = user._id;
+
+        res.json({ status: 'success' });
     } catch (error) {
-        res.json({ status: 'error', message: 'Server error' });
+        console.error('Login error:', error); // Log the error for debugging
+        res.status(500).json({ status: 'error', message: 'Server error' });
     }
-})
+});
+
 
 app.post('/forget_password', apiLimiter, async(req, res) => {
     try {
