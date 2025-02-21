@@ -8,13 +8,6 @@ const multer = require('multer');
 const argon2 = require('argon2');
 const path = require('path');
 const fs = require('fs');
-const rateLimit = require('express-rate-limit');
-const MongoStore = require('rate-limit-mongo');
-
-
-// ---------------------- //
-// ---give permission to client-- //
-// ---------------- //
 
 const corsOptions = {
     origin: ["http://localhost:3000", "*"],
@@ -28,6 +21,18 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.static('contents'));
 app.use(cookie());
+
+app.set('trust proxy', 1)
+
+const rateLimit = require('express-rate-limit');
+const MongoStore = require('rate-limit-mongo');
+
+
+// ---------------------- //
+// ---give permission to client-- //
+// ---------------- //
+
+
 
 // ---------------------- //
 // ---setting the session cookie-- //
