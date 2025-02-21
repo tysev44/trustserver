@@ -164,7 +164,7 @@ app.post('/', apiLimiter, async(req, res) => {
             return res.json({user: null, status : 'offline'})
         }
     } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Server error' });
+        res.status(500).json({ status: 'error', message: error });
     }
 })
 
