@@ -165,6 +165,7 @@ app.post('/', apiLimiter, async(req, res) => {
         }
     } catch (error) {
         res.json({ status : 'error'})
+        res.status(500).json({ status: 'error', message: 'Server error' });
     }
 })
 
