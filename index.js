@@ -240,6 +240,7 @@ app.post('/login', apiLimiter, async (req, res) => {
 
         req.session.email = email;
         req.session.uid = user._id;
+        await req.session.save()
 
         res.json({ status: 'success' });
     } catch (error) {
