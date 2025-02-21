@@ -77,6 +77,8 @@ app.use(session({
         ttl: 14 * 24 * 60 * 60 // Session expiration (14 days)
     }),
     cookie: {
+        secure: true,
+        sameSite: "none",
         maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
         expires: new Date(Date.now() + (1000 * 60 * 60 * 24 * 30)) // Expires 30 days from now
     }
