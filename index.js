@@ -33,8 +33,6 @@ app.use(cookie());
 // ---setting the session cookie-- //
 // ---------------- //
 
-app.set('trust proxy', true);
-
 let store;
 
 try {
