@@ -194,7 +194,7 @@ app.post('/signup', apiLimiter, async(req, res) => {
                 req.session.email = getuid.email;
                 req.session.save()
      
-                res.json({status: 'success'})
+                res.json({status: 'success', info: getuid})
             }
         }
     } catch (error) {
@@ -242,7 +242,7 @@ app.post('/login', apiLimiter, async (req, res) => {
         req.session.user = { email: email };
         await req.session.save()
 
-        res.json({ status: 'success' });
+        res.json({ status: 'success', info: getuid });
     } catch (error) {
         console.error('Login error:', error); // Log the error for debugging
         res.status(500).json({ status: 'error', message: 'Server error' });
