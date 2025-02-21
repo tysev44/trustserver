@@ -26,6 +26,7 @@ app.set('trust proxy', 1)
 
 const rateLimit = require('express-rate-limit');
 const MongoStore = require('rate-limit-mongo');
+const MongoStored = require('connect-mongo');
 
 
 // ---------------------- //
@@ -69,6 +70,11 @@ app.use(session({
     secret:'secret',
     resave: true,
     saveUninitialized: true,
+    store: MongoStored.create({
+        mongoUrl: uri,  // Use your MongoDB connection string
+        collectionName: 'sessions',
+        ttl: 14 * 24 * 60 * 60 // Session expiration (14 days)
+    }),
     cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
         expires: new Date(Date.now() + (1000 * 60 * 60 * 24 * 30)) // Expires 30 days from now
