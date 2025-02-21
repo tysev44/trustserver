@@ -139,11 +139,9 @@ const userSchema = new mongoose.Schema({
     email: String,
     verifyemail: String,
     otp: String,  
-    first_name: String,
-    title: String,
+    balance: Number,
     address: String,
     password: String,
-    ordered: Boolean,
 });
 
 
