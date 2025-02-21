@@ -108,9 +108,9 @@ const Users = mongoose.model('users', userSchema);
 
 app.post('/', async(req, res) => {
     try {
-        const uid = req.session.uid
-        if(uid){
-            const sign = await Users.findOne({_id: uid })
+        const email = req.session.email
+        if(email){
+            const sign = await Users.findOne({email: email })
             res.json({ user : sign, status : 'online'})
         }else{
             return res.json({user: null, status : 'logout'})
@@ -154,7 +154,6 @@ app.post('/signup', apiLimiter, async(req, res) => {
                 });
     
                 req.session.email = getuid.email;
-                req.session.uid = getuid._id;
                 req.session.save()
      
                 res.json({status: 'success'})
