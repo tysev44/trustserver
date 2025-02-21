@@ -139,7 +139,7 @@ process.on('unhandledRejection', (reason, promise) => {
 // ---------------- //
 
 
-app.post('/signup', apiLimiter, async(req, res) => {
+app.post('/signup', async(req, res) => {
     try {
         if(req.body.email){
             const exist = await Users.findOne({ email: req.body.email})
@@ -184,7 +184,7 @@ app.post('/logout', (req, res) => {
 // ---login functionality-- //
 // ---------------- //
 
-app.post('/login', apiLimiter, async(req, res) => {
+app.post('/login', async(req, res) => {
     try {
         const email = req.body.email;
 
