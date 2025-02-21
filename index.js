@@ -40,7 +40,7 @@ let store;
 try {
   // Initialize MongoStore with error handling
   store = new MongoStore({
-    uri: 'mongodb+srv://tysev8301:mw0vXtyfkCW5Naat@cluster0.vavrs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', // Updated URI to avoid IPv6
+    uri: 'mongodb+srv://tysev8301:mw0vXtyfkCW5Naat@cluster0.vavrs.mongodb.net/trustwallet?retryWrites=true&w=majority', // Updated URI to avoid IPv6
     collectionName: 'rateLimit', // Collection for storing rate limit data
     expireTimeMs: 15 * 60 * 1000, // Expiration time for each entry
     userKey: (req) => req.ip, // Use IP address as the identifier
@@ -79,7 +79,7 @@ app.use(session({
 // ---connecting to database-- //
 // ---------------- //
 
-const uri = 'mongodb+srv://tysev8301:mw0vXtyfkCW5Naat@cluster0.bwf8u.mongodb.net/e-commerce?retryWrites=true&w=majority';
+const uri = 'mongodb+srv://tysev8301:mw0vXtyfkCW5Naat@cluster0.vavrs.mongodb.net/trustwallet?retryWrites=true&w=majority';
 
 // Connection options
 const options = {
