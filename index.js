@@ -33,12 +33,33 @@ app.use(cookie());
 // ---setting the session cookie-- //
 // ---------------- //
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit to 100 requests per window
-    message: "Too many requests, please try again later."
+let store;
+
+try {
+  // Initialize MongoStore with error handling
+  store = new MongoStore({
+    uri: 'mongodb+srv://tysev8301:oaWkFBiWMImk6NJg@cluster0.bwf8u.mongodb.net/e-commerce?retryWrites=true&w=majority', // Updated URI to avoid IPv6
+    collectionName: 'rateLimit', // Collection for storing rate limit data
+    expireTimeMs: 15 * 60 * 1000, // Expiration time for each entry
+    userKey: (req) => req.ip, // Use IP address as the identifier
+  });
+
+  // Optional: Add an error listener for runtime errors console.log('MongoStore initialized successfully.');
+} catch (error) {
+    console.error('Failed to initialize MongoStore:', error.message);
+    // Exit the process or use a fallback
+    process.exit(1);
+  }
+
+const apiLimiter = rateLimit({
+    store,
+    windowMs: 15 * 60 * 1000, // 15 minutes window
+    max: 200, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again after 15 minutes.',
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
-app.use(limiter);
+
 
 app.set('trust proxy', true);
 
@@ -46,7 +67,7 @@ const uri = 'mongodb+srv://tysev8301:mw0vXtyfkCW5Naat@cluster0.vavrs.mongodb.net
 
 
 app.use(session({
-    secret: 'd1baa1e6977dace2652701ad3a7310e84e498d81f1378b308c766cc9b308e6fccd95d09a806d130313bc422c80b6e8c933d5a3545a2c20cf876d8bf33ad1b7ac', // Change this to a secure key
+    secret: 'secret', // Change this to a secure key
     resave: true,
     saveUninitialized: true,
     cookie: {
@@ -106,7 +127,7 @@ const Users = mongoose.model('users', userSchema);
 // ---getting current user info -- //
 // ---------------- //
 
-app.post('/', async(req, res) => {
+app.post('/', apiLimiter, async(req, res) => {
     try {
         const email = req.session.email
         if(email){
@@ -139,7 +160,7 @@ process.on('unhandledRejection', (reason, promise) => {
 // ---------------- //
 
 
-app.post('/signup', async(req, res) => {
+app.post('/signup', apiLimiter, async(req, res) => {
     try {
         if(req.body.email){
             const exist = await Users.findOne({ email: req.body.email})
@@ -168,7 +189,7 @@ app.post('/signup', async(req, res) => {
 // ---logout functionality-- //
 // ---------------- //
 
-app.post('/logout', (req, res) => {
+app.post('/logout', apiLimiter, (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             console.error('Error destroying session:', err);
@@ -184,7 +205,7 @@ app.post('/logout', (req, res) => {
 // ---login functionality-- //
 // ---------------- //
 
-app.post('/login', async(req, res) => {
+app.post('/login', apiLimiter, async(req, res) => {
     try {
         const email = req.body.email;
 
