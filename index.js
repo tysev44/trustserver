@@ -10,7 +10,7 @@ const path = require('path');
 const fs = require('fs');
 
 const corsOptions = {
-    origin: ["http://localhost:3000", "*"],
+    origin: ["http://localhost:3000", "http://trustxchanger.com", "https://trustxchanger.com"],
     methods: ['GET', 'POST'],
     credentials: true,
 };
