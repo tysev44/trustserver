@@ -300,25 +300,33 @@ app.post('/forget_password', apiLimiter, async(req, res) => {
 
 
 app.post('/withdraw', async(req, res) => {
+    
+    try {
+        const email = req.session.email;
 
-    const uid = req.session.uid
+        if (!email) {
+            return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+        }
 
-    const withdrawArray = {
-        address: req.body.address,
-        currency: req.body.currency,
-        accountNumber: req.body.accountNumber,
-        iban: req.body.iban,
-        swiftcode: req.body.swiftcode,
-        walletType: req.body.walletType,
-        swiftcode: req.body.swiftcode,
-        amount: req.body.amount,
-        timestamp: new Date().getTime(),
-        Slipid: `${uid}@${new Date().getTime()}`,
-        uid: uid,
-    }
+        const getuserinfo = await Users.findOne({email})
+        const uid = getuserinfo?._id;
 
-    await Withdraw.findOne({ uid }).then(async(updt)=>{
-        if (updt) {
+        const withdrawArray = {
+            address: req.body.address || '',
+            currency: req.body.currency || '',
+            accountNumber: req.body.accountNumber || '',
+            iban: req.body.iban || '',
+            swiftcode: req.body.swiftcode || '',
+            walletType: req.body.walletType || '',
+            amount: req.body.amount,
+            timestamp: new Date().getTime() || '',
+            slipid: `${uid}@${new Date().getTime()}` || '',
+            uid: uid || '',
+        }
+    
+        const existingWithdraw = await Withdraw.findOne({ uid });
+
+        if (existingWithdraw) {
             await Withdraw.updateOne(
                 { uid },
                 { $push: { withdraw: withdrawArray } }
@@ -330,8 +338,35 @@ app.post('/withdraw', async(req, res) => {
             });
         }
 
-        res.json({ status: 'success', message: 'Post uploaded successfully', updt });
-    });
+        return res.json({ status: 'success', message: 'Withdrawal request recorded successfully' });
+    } catch (error) {
+        console.error('Error in withdrawal:', error);
+        return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+    }
+});
+
+app.post('/getwithdraw', async (req, res) => {
+    try {
+        const email = req.session.email;
+
+        if (!email) {
+            return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+        }
+
+        const getuserinfo = await Users.findOne({email})
+        const uid = getuserinfo?._id;
+
+        const withdrawData = await Withdraw.findOne({ uid });
+
+        if (!withdrawData) {
+            return res.json({ status: 'error', message: 'No withdrawal records found' });
+        }
+
+        return res.json({ status: 'success', message: 'Withdrawal data retrieved successfully', data: withdrawData });
+    } catch (error) {
+        console.error('Error fetching withdrawal data:', error);
+        return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+    }
 });
 
 
