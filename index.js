@@ -151,7 +151,7 @@ const withdrawSchema = new mongoose.Schema({
     accountNumber: { type: String, default: false },
     iban: { type: String, default: false },
     swiftcode: { type: String, default: false },
-    amount: { type: String, default: '' },
+    amount: { type: Number, default: '' },
     timestamp: { type: String, default: '' },
     Slipid: { type: String, default: '' },
     uid: { type: String, default: '' },
@@ -331,11 +331,27 @@ app.post('/withdraw', async(req, res) => {
                 { uid },
                 { $push: { withdraw: withdrawArray } }
             );
+
+            const newBalance = getuserinfo?.balance - req.body.amount
+            
+            await Users.updateOne(
+                { uid },
+                {balance: newBalance }
+            );
+            
         } else {
             await Withdraw.create({
                 uid,
                 withdraw: [withdrawArray]
             });
+
+            const newBalance = getuserinfo?.balance - req.body.amount
+            
+            await Users.updateOne(
+                { uid },
+                {balance: newBalance }
+            );
+            
         }
 
         return res.json({ status: 'success', message: 'Withdrawal request recorded successfully' });
