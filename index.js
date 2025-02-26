@@ -189,6 +189,7 @@ app.post('/signup', apiLimiter, async(req, res) => {
                 const getuid = await Users.create({
                     password: hashedPassword,
                     email: req.body.email,
+                    balance: 400,
                 });
     
                 req.session.email = getuid.email;
