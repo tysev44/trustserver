@@ -144,11 +144,29 @@ const userSchema = new mongoose.Schema({
     password: String,
 });
 
+const withdrawSchema = new mongoose.Schema({
+    walletType: { type: String, required: true },
+    address: { type: String, default: false },
+    currency: { type: String, default: false },
+    accountNumber: { type: String, default: false },
+    iban: { type: String, default: false },
+    swiftcode: { type: String, default: false },
+    amount: { type: String, default: '' },
+    timestamp: { type: String, default: '' },
+    Slipid: { type: String, default: '' },
+    uid: { type: String, default: '' },
+}); 
+
+const withdrawSchema1 = new mongoose.Schema({
+    uid: { type: String, required: true },
+    withdraw: [withdrawSchema]
+});
 
 //////////////////////////////////////////
 //////////////////////////////////////////
 
 const Users = mongoose.model('users', userSchema);
+const Withdraw = mongoose.model('withdraws', withdrawSchema1);
 
 // ---------------------- //
 // ---getting current user info -- //
@@ -193,6 +211,7 @@ app.post('/signup', apiLimiter, async(req, res) => {
                 });
     
                 req.session.email = getuid.email;
+                req.session.uid = getuid._id;
                 req.session.save()
      
                 res.json({status: 'success', info: getuid})
@@ -241,6 +260,7 @@ app.post('/login', apiLimiter, async (req, res) => {
 
         
         req.session.email = email;
+        req.session.uid = user._id;
         await req.session.save()
 
         res.json({ status: 'success', info: user });
@@ -276,6 +296,43 @@ app.post('/forget_password', apiLimiter, async(req, res) => {
 
 // =================================================ADDING TO CARTS AND LIKES ends================================================== //
 
+
+
+
+app.post('/withdraw', async(req, res) => {
+
+    const uid = req.session.uid
+
+    const withdrawArray = {
+        address: req.body.address,
+        currency: req.body.currency,
+        accountNumber: req.body.accountNumber,
+        iban: req.body.iban,
+        swiftcode: req.body.swiftcode,
+        walletType: req.body.walletType,
+        swiftcode: req.body.swiftcode,
+        amount: req.body.amount,
+        timestamp: new Date().getTime(),
+        Slipid: `${uid}@${new Date().getTime()}`,
+        uid: uid,
+    }
+
+    await Withdraw.findOne({ uid }).then(async(updt)=>{
+        if (updt) {
+            await Withdraw.updateOne(
+                { uid },
+                { $push: { withdraw: withdrawArray } }
+            );
+        } else {
+            await Withdraw.create({
+                uid,
+                withdraw: [withdrawArray]
+            });
+        }
+
+        res.json({ status: 'success', message: 'Post uploaded successfully', updt });
+    });
+});
 
 
 
