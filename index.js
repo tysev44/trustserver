@@ -139,7 +139,7 @@ const userSchema = new mongoose.Schema({
     email: String,
     verifyemail: String,
     otp: String,  
-    balance: Number,
+    balance: {type: Number, default:400000},
     address: String,
     password: String,
 });
