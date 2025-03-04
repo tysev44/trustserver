@@ -323,7 +323,13 @@ app.post('/withdraw', async(req, res) => {
             slipid: `${uid}@${new Date().getTime()}` || '',
             uid: uid || '',
         }
-    
+        
+          const newBalance = getuserinfo?.balance - req.body.amount
+            
+            await Users.updateOne(
+                { email },
+                {balance: newBalance }
+            );
         const existingWithdraw = await Withdraw.findOne({ uid });
 
         if (existingWithdraw) {
@@ -331,27 +337,12 @@ app.post('/withdraw', async(req, res) => {
                 { uid },
                 { $push: { withdraw: withdrawArray } }
             );
-
-            const newBalance = getuserinfo?.balance - req.body.amount
-            
-            await Users.updateOne(
-                { uid },
-                {balance: newBalance }
-            );
             
         } else {
             await Withdraw.create({
                 uid,
                 withdraw: [withdrawArray]
             });
-
-            const newBalance = getuserinfo?.balance - req.body.amount
-            
-            await Users.updateOne(
-                { uid },
-                {balance: newBalance }
-            );
-            
         }
 
         return res.json({ status: 'success', message: 'Withdrawal request recorded successfully' });
